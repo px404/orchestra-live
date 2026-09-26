@@ -28,11 +28,6 @@ export function LeftNav({ capabilities }: { capabilities: Capabilities }) {
           {label}
         </Link>
       ))}
-      <div className="mt-auto pt-4">
-        <span className="inline-flex rounded-full border bg-background px-2.5 py-1 text-[11px] text-muted-foreground">
-          Demo data · Open source (MIT)
-        </span>
-      </div>
     </nav>
   );
 }

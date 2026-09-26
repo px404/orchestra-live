@@ -15,8 +15,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ShellActivityRouteImport } from './routes/_shell.activity'
 import { Route as ShellBoardRouteImport } from './routes/_shell.board'
 import { Route as ShellGraphRouteImport } from './routes/_shell.graph'
-import { Route as ShellKnowledgeRouteImport } from './routes/_shell.knowledge'
 import { Route as ShellReviewRouteImport } from './routes/_shell.review'
+import { Route as ShellKnowledgeIndexRouteImport } from './routes/_shell.knowledge.index'
+import { Route as ShellKnowledgeIdRouteImport } from './routes/_shell.knowledge.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,14 +48,19 @@ const ShellGraphRoute = ShellGraphRouteImport.update({
   path: '/graph',
   getParentRoute: () => ShellRoute,
 } as any)
-const ShellKnowledgeRoute = ShellKnowledgeRouteImport.update({
-  id: '/knowledge',
-  path: '/knowledge',
-  getParentRoute: () => ShellRoute,
-} as any)
 const ShellReviewRoute = ShellReviewRouteImport.update({
   id: '/review',
   path: '/review',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellKnowledgeIndexRoute = ShellKnowledgeIndexRouteImport.update({
+  id: '/knowledge/',
+  path: '/knowledge/',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellKnowledgeIdRoute = ShellKnowledgeIdRouteImport.update({
+  id: '/knowledge/$id',
+  path: '/knowledge/$id',
   getParentRoute: () => ShellRoute,
 } as any)
 
@@ -64,8 +70,9 @@ export interface FileRoutesByFullPath {
   '/activity': typeof ShellActivityRoute
   '/board': typeof ShellBoardRoute
   '/graph': typeof ShellGraphRoute
-  '/knowledge': typeof ShellKnowledgeRoute
   '/review': typeof ShellReviewRoute
+  '/knowledge/$id': typeof ShellKnowledgeIdRoute
+  '/knowledge/': typeof ShellKnowledgeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -73,8 +80,9 @@ export interface FileRoutesByTo {
   '/activity': typeof ShellActivityRoute
   '/board': typeof ShellBoardRoute
   '/graph': typeof ShellGraphRoute
-  '/knowledge': typeof ShellKnowledgeRoute
   '/review': typeof ShellReviewRoute
+  '/knowledge/$id': typeof ShellKnowledgeIdRoute
+  '/knowledge': typeof ShellKnowledgeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -84,8 +92,9 @@ export interface FileRoutesById {
   '/_shell/activity': typeof ShellActivityRoute
   '/_shell/board': typeof ShellBoardRoute
   '/_shell/graph': typeof ShellGraphRoute
-  '/_shell/knowledge': typeof ShellKnowledgeRoute
   '/_shell/review': typeof ShellReviewRoute
+  '/_shell/knowledge/$id': typeof ShellKnowledgeIdRoute
+  '/_shell/knowledge/': typeof ShellKnowledgeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -95,8 +104,9 @@ export interface FileRouteTypes {
     | '/activity'
     | '/board'
     | '/graph'
-    | '/knowledge'
     | '/review'
+    | '/knowledge/$id'
+    | '/knowledge/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -104,8 +114,9 @@ export interface FileRouteTypes {
     | '/activity'
     | '/board'
     | '/graph'
-    | '/knowledge'
     | '/review'
+    | '/knowledge/$id'
+    | '/knowledge'
   id:
     | '__root__'
     | '/'
@@ -114,8 +125,9 @@ export interface FileRouteTypes {
     | '/_shell/activity'
     | '/_shell/board'
     | '/_shell/graph'
-    | '/_shell/knowledge'
     | '/_shell/review'
+    | '/_shell/knowledge/$id'
+    | '/_shell/knowledge/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -168,18 +180,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShellGraphRouteImport
       parentRoute: typeof ShellRoute
     }
-    '/_shell/knowledge': {
-      id: '/_shell/knowledge'
-      path: '/knowledge'
-      fullPath: '/knowledge'
-      preLoaderRoute: typeof ShellKnowledgeRouteImport
-      parentRoute: typeof ShellRoute
-    }
     '/_shell/review': {
       id: '/_shell/review'
       path: '/review'
       fullPath: '/review'
       preLoaderRoute: typeof ShellReviewRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/knowledge/': {
+      id: '/_shell/knowledge/'
+      path: '/knowledge'
+      fullPath: '/knowledge/'
+      preLoaderRoute: typeof ShellKnowledgeIndexRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/knowledge/$id': {
+      id: '/_shell/knowledge/$id'
+      path: '/knowledge/$id'
+      fullPath: '/knowledge/$id'
+      preLoaderRoute: typeof ShellKnowledgeIdRouteImport
       parentRoute: typeof ShellRoute
     }
   }
@@ -189,16 +208,18 @@ interface ShellRouteChildren {
   ShellActivityRoute: typeof ShellActivityRoute
   ShellBoardRoute: typeof ShellBoardRoute
   ShellGraphRoute: typeof ShellGraphRoute
-  ShellKnowledgeRoute: typeof ShellKnowledgeRoute
   ShellReviewRoute: typeof ShellReviewRoute
+  ShellKnowledgeIdRoute: typeof ShellKnowledgeIdRoute
+  ShellKnowledgeIndexRoute: typeof ShellKnowledgeIndexRoute
 }
 
 const ShellRouteChildren: ShellRouteChildren = {
   ShellActivityRoute: ShellActivityRoute,
   ShellBoardRoute: ShellBoardRoute,
   ShellGraphRoute: ShellGraphRoute,
-  ShellKnowledgeRoute: ShellKnowledgeRoute,
   ShellReviewRoute: ShellReviewRoute,
+  ShellKnowledgeIdRoute: ShellKnowledgeIdRoute,
+  ShellKnowledgeIndexRoute: ShellKnowledgeIndexRoute,
 }
 
 const ShellRouteWithChildren = ShellRoute._addFileChildren(ShellRouteChildren)

@@ -18,6 +18,12 @@ export type TaskSummary = {
   live: Live;
   cost_usd: number;
   updated_at: string;
+  due: string | null;
+  overdue: boolean;
+  /** Not yet sent by the backend; rendered only when present. */
+  sequence?: number;
+  locked?: boolean;
+  blocked_by?: { id: string; title: string; status: Status }[];
   allowed_actions: ("approve" | "reopen")[];
 };
 
@@ -85,6 +91,7 @@ export type LiveAgent = {
 export type Overview = {
   milestones: { id: string; name: string; due: string; total: number; done: number; pct: number }[];
   by_status: { todo: number; in_progress: number; review: number; done: number };
+  overdue: number;
   review_queue: ReviewItem[];
   cost: null | {
     total_usd: number;
@@ -100,6 +107,8 @@ export type GraphNode = {
   status?: Status;
   department?: string;
   role?: Role;
+  due?: string;
+  overdue?: boolean;
   live?: boolean;
   parent_id?: string | null;
 };

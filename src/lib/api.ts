@@ -21,7 +21,10 @@ import type {
   Update,
 } from "./types";
 
-export const DEFAULT_API_BASE = "http://localhost:8787";
+import { API_BASES } from "./config";
+
+export const DEFAULT_API_BASE = API_BASES[0];
+const LEGACY_BASE = "http://localhost:8787";
 
 export type MockMode = "auto" | "on" | "off";
 export type DataSource = "live" | "mock";
@@ -59,7 +62,8 @@ function write(key: string, value: string | null) {
 }
 
 export function getApiBase(): string {
-  return read("apiBase") ?? DEFAULT_API_BASE;
+  const stored = read("apiBase");
+  return stored && stored !== LEGACY_BASE ? stored : DEFAULT_API_BASE;
 }
 
 export function setApiBase(base: string) {
@@ -81,14 +85,13 @@ export function clearToken() {
 
 export function getMockMode(): MockMode {
   const value = read("mockMode");
-  return value === "on" || value === "off" ? value : "auto";
+  return value === "on" || value === "auto" ? value : "off";
 }
 
 export function setMockMode(mode: MockMode) {
   write("mockMode", mode);
   if (mode === "on") setSource("mock");
-  if (mode === "off") setSource("live");
-  if (mode === "auto") void checkHealth();
+  if (mode !== "on") void checkHealth();
   notify();
 }
 
@@ -151,7 +154,7 @@ export function startSourceMonitor() {
   if (started || !hasWindow()) return;
   started = true;
   const run = () => {
-    if (getMockMode() === "auto") void checkHealth();
+    if (getMockMode() !== "on") void checkHealth();
   };
   run();
   window.setInterval(run, 10_000);
@@ -245,14 +248,14 @@ export const api = {
   logout: () => request<{ ok: true }>("POST", "/api/auth/logout"),
   me: () => request<Me>("GET", "/api/me"),
   agentKey: () => request<AgentKey>("GET", "/api/me/agent-key"),
-  tasks: (filters: { status?: string; department?: string; person?: string; mine?: boolean } = {}) =>
+  tasks: (filters: { status?: string | undefined; department?: string | undefined; person?: string | undefined; mine?: boolean } = {}) =>
     request<TaskSummary[]>("GET", `/api/tasks${query(filters)}`),
   task: (id: string) => request<TaskDetail>("GET", `/api/tasks/${id}`),
   approve: (id: string, note?: string) =>
     request<TaskDetail>("POST", `/api/tasks/${id}/approve`, { note }),
   reopen: (id: string, note: string) =>
     request<TaskDetail>("POST", `/api/tasks/${id}/reopen`, { note }),
-  activity: (filters: { limit?: number; task?: string; via?: string; kind?: string } = {}) =>
+  activity: (filters: { limit?: number; task?: string | undefined; via?: string | undefined; kind?: string | undefined } = {}) =>
     request<Update[]>(
       "GET",
       `/api/activity${query({ ...filters, limit: String(filters.limit ?? 50) })}`,
@@ -262,7 +265,6 @@ export const api = {
   graph: () => request<GraphData>("GET", "/api/graph"),
   kb: (q?: string) => request<KbSummary[]>("GET", `/api/kb${query({ q })}`),
   kbDoc: (id: string) => request<KbDoc>("GET", `/api/kb/${id}`),
-  resetDemo: () => request<{ ok: true }>("POST", "/api/demo/reset"),
 };
 
 /** Artifact URLs: relative paths are served by the backend with the token. */
