@@ -234,7 +234,7 @@ function TaskPanel({ id, onPanel }: { id: string; onPanel: (panel: Panel) => voi
       <PanelSection title="Subtasks"><TaskLinks tasks={task.subtasks} onPanel={onPanel} empty="No subtasks" /></PanelSection>
       <PanelSection title="Dependencies"><TaskLinks tasks={task.depends_on} onPanel={onPanel} empty="No dependencies" /></PanelSection>
       <PanelSection title="Blocks"><TaskLinks tasks={task.blocks} onPanel={onPanel} empty="Doesn't block another task" /></PanelSection>
-      {task.locked && task.blocked_by.length ? <PanelSection title="Waiting on"><TaskLinks tasks={task.blocked_by} onPanel={onPanel} /></PanelSection> : null}
+      {task.locked && task.blocked_by?.length ? <PanelSection title="Waiting on"><TaskLinks tasks={task.blocked_by} onPanel={onPanel} /></PanelSection> : null}
       {task.sequence != null ? <p className="text-xs text-muted-foreground">Suggested sequence: {task.sequence}</p> : null}
     </div>
   );
