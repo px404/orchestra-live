@@ -20,6 +20,8 @@ export const Route = createFileRoute("/_shell/graph")({
       { name: "description", content: "Relational graph of milestones, tasks and the people working together." },
       { property: "og:title", content: "Project graph — Orchestra" },
       { property: "og:description", content: "Relational graph of milestones, tasks and the people working together." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: GraphPage,
