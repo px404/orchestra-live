@@ -10,6 +10,16 @@ import { meQuery } from "@/lib/queries";
 /** Landing router: Graph for PMs (capabilities.graph), otherwise Board. */
 export const Route = createFileRoute("/")({
   ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Workspace — Orchestra" },
+      { name: "description", content: "Open your live Orchestra project workspace." },
+      { property: "og:title", content: "Workspace — Orchestra" },
+      { property: "og:description", content: "Open your live Orchestra project workspace." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Landing,
 });
 
