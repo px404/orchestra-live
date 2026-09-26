@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { StepPlaceholder } from "@/components/step-placeholder";
 
-export const Route = createFileRoute("/_shell/knowledge")({
+export const Route = createFileRoute("/_shell/knowledge/")({
   head: () => ({
     meta: [
       { title: "Knowledge — Orchestra" },

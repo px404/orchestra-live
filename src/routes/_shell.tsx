@@ -3,6 +3,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { Logo } from "@/components/logo";
 import { LeftNav } from "@/components/shell/left-nav";
 import { LiveAgentsList } from "@/components/shell/live-agents";
+import { TaskDrawer } from "@/components/task-drawer";
 import { TopBar } from "@/components/shell/top-bar";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useSourceMonitor } from "@/hooks/use-data-source";
@@ -38,6 +39,7 @@ function ShellLayout() {
           <LiveAgentsList />
         </aside>
       </div>
+      <TaskDrawer />
     </div>
   );
 }

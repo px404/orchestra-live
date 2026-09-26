@@ -3,7 +3,9 @@ import { Bot, FileText, Lock } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { Markdown } from "@/components/markdown";
-import { Avatar, Chip, DueLabel, OverdueBadge, StatusPill } from "@/components/task-bits";
+import { Link } from "@tanstack/react-router";
+
+import { Avatar, Chip, UpdateCard, DueLabel, OverdueBadge, StatusPill } from "@/components/task-bits";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +16,7 @@ import { useOpenTask } from "@/hooks/use-task-param";
 import { artifactUrl } from "@/lib/api";
 import { money, relativeTime, STATUS_LABEL } from "@/lib/format";
 import { taskQuery } from "@/lib/queries";
-import type { Artifact, Status, TaskDetail, UserRef } from "@/lib/types";
+import type { Artifact, Status, TaskDetail, Update, UserRef } from "@/lib/types";
 
 /** Task drawer driven by ?task=<id> on any signed-in page. */
 export function TaskDrawer() {
@@ -147,9 +149,6 @@ function Timeline({ t }: { t: TaskDetail }) {
   );
 }
 
-import { UpdateCard } from "@/components/task-bits";
-import type { Update } from "@/lib/types";
-
 function UpdateCardWithImages({ update, images }: { update: Update; images: Artifact[] }) {
   const inline = images.filter((a) => !update.summary.includes(a.url));
   return (
@@ -223,9 +222,9 @@ function Details({ t }: { t: TaskDetail }) {
                 {d.readable ? <FileText className="size-3.5" /> : <Lock className="size-3.5 text-muted-foreground" />}
                 <span className="font-mono text-xs text-muted-foreground">{d.id}</span>
                 {d.readable ? (
-                  <a href={`/knowledge/${d.id}`} className="hover:underline">
+                  <Link to="/knowledge/$id" params={{ id: d.id }} className="hover:underline">
                     {d.title}
-                  </a>
+                  </Link>
                 ) : (
                   <span className="text-muted-foreground">{d.title}</span>
                 )}
