@@ -17,18 +17,19 @@ export function LeftNav({ capabilities }: { capabilities: Capabilities }) {
   ] as const;
 
   return (
-    <nav className="flex w-52 shrink-0 flex-col gap-0.5 border-r bg-sidebar p-3">
+    <nav className="flex w-14 shrink-0 flex-col gap-0.5 border-r bg-sidebar p-2 sm:w-52 sm:p-3">
       {items.map(({ to, label, icon: Icon }) => (
         <Link
           key={to}
           to={to}
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          aria-label={label}
+          className="flex items-center justify-center gap-2.5 rounded-lg px-2 py-2 text-sm text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground sm:justify-start sm:px-3"
           activeProps={{
             className: "bg-sidebar-accent font-medium !text-sidebar-accent-foreground",
           }}
         >
           <Icon className="size-4" />
-          {label}
+          <span className="hidden sm:inline">{label}</span>
         </Link>
       ))}
     </nav>
