@@ -804,8 +804,19 @@ function toSummary(task: MockTask, viewer: MockUser): TaskSummary {
       : null,
     cost_usd: task.cost_usd,
     updated_at: iso(task.updated_min),
+    ...dueOf(task),
     allowed_actions: allowedActions(task, viewer),
   };
+}
+
+function dueOf(task: MockTask): { due: string; overdue: boolean } {
+  const m = MILESTONES.find((x) => x.id === task.milestone_id)!;
+  const n = Number(task.id.replace(/\D/g, "")) || 0;
+  const d = new Date(m.due);
+  d.setDate(d.getDate() - ((n * 3) % 9));
+  const due = d.toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  return { due, overdue: task.status !== "done" && due < today };
 }
 
 function allUpdates(): MockUpdate[] {
@@ -983,7 +994,13 @@ function overview(viewer: MockUser): Overview {
     };
   }
 
-  return { milestones, by_status, review_queue, cost };
+  return {
+    milestones,
+    by_status,
+    overdue: visible.filter((t) => dueOf(t).overdue).length,
+    review_queue,
+    cost,
+  };
 }
 
 function listTasks(viewer: MockUser, params: URLSearchParams): TaskSummary[] {
@@ -1144,6 +1161,7 @@ export function buildGraph(viewer: MockUser): GraphData {
       label: `${t.id} ${t.title}`,
       status: t.status,
       ...(t.departments[0] ? { department: t.departments[0] } : {}),
+      ...dueOf(t),
       live: Boolean(t.live),
       parent_id: t.parent_id ? `task:${t.parent_id}` : null,
     });
