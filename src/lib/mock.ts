@@ -915,7 +915,12 @@ function liveAgents(viewer: MockUser): LiveAgent[] {
         last_seen: iso(active ? 0 : 6 + (ROLE_RANK[u.role] + 1) * 3),
       };
     })
-    .filter((a) => viewer.role === "pm" || a.user.department === viewer.department)
+    .filter((a) => {
+      if (viewer.role === "pm") return true;
+      if (a.user.department !== viewer.department) return false;
+      if (viewer.role === "senior") return true;
+      return a.user.id === viewer.id || a.user.role === "junior";
+    })
     .sort((a, b) => (a.status === b.status ? a.user.name.localeCompare(b.user.name) : a.status === "active" ? -1 : 1));
 }
 
