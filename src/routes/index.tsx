@@ -1,24 +1,42 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+import { Logo } from "@/components/logo";
+import { useSourceMonitor } from "@/hooks/use-data-source";
+import { getToken } from "@/lib/api";
+import { meQuery } from "@/lib/queries";
+
+/** Landing router: Graph for PMs (capabilities.graph), otherwise Board. */
 export const Route = createFileRoute("/")({
-  component: Index,
+  ssr: false,
+  component: Landing,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Landing() {
+  const navigate = useNavigate();
+  useSourceMonitor();
+  const token = typeof window === "undefined" ? null : getToken();
+
+  const { data: me, error } = useQuery({ ...meQuery(), enabled: Boolean(token) });
+
+  useEffect(() => {
+    if (!token) {
+      void navigate({ to: "/login", search: { next: "/" }, replace: true });
+      return;
+    }
+    if (error) return;
+    if (me) {
+      void navigate({ to: me.capabilities.graph ? "/graph" : "/board", replace: true });
+    }
+  }, [error, me, navigate, token]);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center gap-3 text-muted-foreground">
+        <Logo size={30} />
+        <span className="text-sm">Loading your workspace…</span>
+      </div>
     </div>
   );
 }
