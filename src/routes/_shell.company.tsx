@@ -65,7 +65,7 @@ function CompanyPage() {
     if (me && (!allowed || !enabled)) void navigate({ to: "/board", replace: true });
   }, [allowed, enabled, me, navigate]);
 
-  if (!allowed || !enabled) return null;
+  if (!me || !allowed || !enabled) return null;
 
   const allTasks = [...tasks, ...demoTasks];
   const yourTasks = allTasks.filter((task) => task.workers.some((worker) => worker.id === me.user.id));
@@ -120,10 +120,10 @@ function CompanyPage() {
                 <TaskGroups tasks={allTasks} overview={overview} groupBy={groupBy} onPanel={setPanel} />
               </div>
             ) : (
-              <button type="button" onClick={() => setShowCompanyTasks(true)} className="mt-9 flex w-full items-center justify-between border-t border-dashed pt-5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground">
+              <Button type="button" variant="ghost" onClick={() => setShowCompanyTasks(true)} className="mt-9 h-auto w-full justify-between rounded-none border-t border-dashed px-0 pt-5 text-left text-xs text-muted-foreground hover:bg-transparent hover:text-foreground">
                 <span className="inline-flex items-center gap-2"><Users className="size-4" /> Company tasks are hidden to keep this view focused</span>
                 <span className="font-semibold text-primary">Show company tasks</span>
-              </button>
+              </Button>
             )}
           </div>
         </div>
