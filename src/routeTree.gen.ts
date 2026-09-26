@@ -10,23 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as BoardRouteImport } from './routes/board'
-import { Route as GraphRouteImport } from './routes/graph'
+import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ShellActivityRouteImport } from './routes/_shell.activity'
+import { Route as ShellBoardRouteImport } from './routes/_shell.board'
+import { Route as ShellGraphRouteImport } from './routes/_shell.graph'
+import { Route as ShellKnowledgeRouteImport } from './routes/_shell.knowledge'
+import { Route as ShellReviewRouteImport } from './routes/_shell.review'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BoardRoute = BoardRouteImport.update({
-  id: '/board',
-  path: '/board',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GraphRoute = GraphRouteImport.update({
-  id: '/graph',
-  path: '/graph',
+const ShellRoute = ShellRouteImport.update({
+  id: '/_shell',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -34,38 +32,95 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShellActivityRoute = ShellActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellBoardRoute = ShellBoardRouteImport.update({
+  id: '/board',
+  path: '/board',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellGraphRoute = ShellGraphRouteImport.update({
+  id: '/graph',
+  path: '/graph',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellKnowledgeRoute = ShellKnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellReviewRoute = ShellReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => ShellRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/board': typeof BoardRoute
-  '/graph': typeof GraphRoute
   '/login': typeof LoginRoute
+  '/activity': typeof ShellActivityRoute
+  '/board': typeof ShellBoardRoute
+  '/graph': typeof ShellGraphRoute
+  '/knowledge': typeof ShellKnowledgeRoute
+  '/review': typeof ShellReviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/board': typeof BoardRoute
-  '/graph': typeof GraphRoute
   '/login': typeof LoginRoute
+  '/activity': typeof ShellActivityRoute
+  '/board': typeof ShellBoardRoute
+  '/graph': typeof ShellGraphRoute
+  '/knowledge': typeof ShellKnowledgeRoute
+  '/review': typeof ShellReviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/board': typeof BoardRoute
-  '/graph': typeof GraphRoute
+  '/_shell': typeof ShellRouteWithChildren
   '/login': typeof LoginRoute
+  '/_shell/activity': typeof ShellActivityRoute
+  '/_shell/board': typeof ShellBoardRoute
+  '/_shell/graph': typeof ShellGraphRoute
+  '/_shell/knowledge': typeof ShellKnowledgeRoute
+  '/_shell/review': typeof ShellReviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/board' | '/graph' | '/login'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/activity'
+    | '/board'
+    | '/graph'
+    | '/knowledge'
+    | '/review'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/board' | '/graph' | '/login'
-  id: '__root__' | '/' | '/board' | '/graph' | '/login'
+  to:
+    | '/'
+    | '/login'
+    | '/activity'
+    | '/board'
+    | '/graph'
+    | '/knowledge'
+    | '/review'
+  id:
+    | '__root__'
+    | '/'
+    | '/_shell'
+    | '/login'
+    | '/_shell/activity'
+    | '/_shell/board'
+    | '/_shell/graph'
+    | '/_shell/knowledge'
+    | '/_shell/review'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BoardRoute: typeof BoardRoute
-  GraphRoute: typeof GraphRoute
+  ShellRoute: typeof ShellRouteWithChildren
   LoginRoute: typeof LoginRoute
 }
 
@@ -78,18 +133,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/board': {
-      id: '/board'
-      path: '/board'
-      fullPath: '/board'
-      preLoaderRoute: typeof BoardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/graph': {
-      id: '/graph'
-      path: '/graph'
-      fullPath: '/graph'
-      preLoaderRoute: typeof GraphRouteImport
+    '/_shell': {
+      id: '/_shell'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ShellRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -99,13 +147,65 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_shell/activity': {
+      id: '/_shell/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof ShellActivityRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/board': {
+      id: '/_shell/board'
+      path: '/board'
+      fullPath: '/board'
+      preLoaderRoute: typeof ShellBoardRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/graph': {
+      id: '/_shell/graph'
+      path: '/graph'
+      fullPath: '/graph'
+      preLoaderRoute: typeof ShellGraphRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/knowledge': {
+      id: '/_shell/knowledge'
+      path: '/knowledge'
+      fullPath: '/knowledge'
+      preLoaderRoute: typeof ShellKnowledgeRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/review': {
+      id: '/_shell/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ShellReviewRouteImport
+      parentRoute: typeof ShellRoute
+    }
   }
 }
 
+interface ShellRouteChildren {
+  ShellActivityRoute: typeof ShellActivityRoute
+  ShellBoardRoute: typeof ShellBoardRoute
+  ShellGraphRoute: typeof ShellGraphRoute
+  ShellKnowledgeRoute: typeof ShellKnowledgeRoute
+  ShellReviewRoute: typeof ShellReviewRoute
+}
+
+const ShellRouteChildren: ShellRouteChildren = {
+  ShellActivityRoute: ShellActivityRoute,
+  ShellBoardRoute: ShellBoardRoute,
+  ShellGraphRoute: ShellGraphRoute,
+  ShellKnowledgeRoute: ShellKnowledgeRoute,
+  ShellReviewRoute: ShellReviewRoute,
+}
+
+const ShellRouteWithChildren = ShellRoute._addFileChildren(ShellRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BoardRoute: BoardRoute,
-  GraphRoute: GraphRoute,
+  ShellRoute: ShellRouteWithChildren,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
