@@ -22,7 +22,10 @@ export function useDataSource(): { source: DataSource; mode: MockMode } {
   useEffect(() => {
     const sync = () => setSnapshot({ source: getSource(), mode: getMockMode() });
     sync();
-    return subscribeSource(sync);
+    const unsubscribe = subscribeSource(sync);
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return snapshot;
@@ -34,7 +37,7 @@ export function useSourceMonitor() {
 
   useEffect(() => {
     startSourceMonitor();
-    return onSourceFlip((next) => {
+    const unsubscribe = onSourceFlip((next) => {
       queryClient.clear();
       if (next === "mock") {
         toast.warning("Backend offline, showing mock data");
@@ -42,5 +45,8 @@ export function useSourceMonitor() {
         toast.success("Connected to live backend");
       }
     });
+    return () => {
+      unsubscribe();
+    };
   }, [queryClient]);
 }

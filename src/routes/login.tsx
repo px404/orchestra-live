@@ -16,7 +16,7 @@ import { ApiError, api, getToken, setToken } from "@/lib/api";
 import { DEMO_ACCOUNTS, MOCK_PASSWORD } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
-type Search = { next?: string };
+type Search = { next?: string | undefined };
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): Search => ({

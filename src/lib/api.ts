@@ -190,14 +190,15 @@ async function request<T>(method: "GET" | "POST", path: string, body?: unknown):
 
   let res: Response;
   try {
-    res = await fetch(`${getApiBase()}${path}`, {
+    const init: RequestInit = {
       method,
       headers: {
         ...(body ? { "content-type": "application/json" } : {}),
         ...(token ? { authorization: `Bearer ${token}` } : {}),
       },
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    };
+    if (body) init.body = JSON.stringify(body);
+    res = await fetch(`${getApiBase()}${path}`, init);
   } catch {
     if (getMockMode() === "auto") setSource("mock");
     throw new ApiError(0, "Cannot reach the backend");

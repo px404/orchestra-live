@@ -714,13 +714,13 @@ function advance() {
 
   for (const task of TASKS) {
     const texts = ACTIVITY_TEXTS[task.id];
-    if (task.live && texts) {
-      task.live.activity = texts[state.tick % texts.length];
+    if (task.live && texts && texts.length > 0) {
+      task.live.activity = texts[state.tick % texts.length]!;
     }
   }
 
   if (state.tick % 3 === 0) {
-    const seed = EXTRA_SUMMARIES[(state.tick / 3) % EXTRA_SUMMARIES.length | 0];
+    const seed = EXTRA_SUMMARIES[Math.floor(state.tick / 3) % EXTRA_SUMMARIES.length]!;
     state.extra.unshift({
       id: state.nextId++,
       task_id: seed.task_id,
@@ -1028,7 +1028,12 @@ function taskDetail(viewer: MockUser, id: string): TaskDetail {
   };
 }
 
-function actOnTask(viewer: MockUser, id: string, action: "approve" | "reopen", note?: string): TaskDetail {
+function actOnTask(
+  viewer: MockUser,
+  id: string,
+  action: "approve" | "reopen",
+  note?: string | undefined,
+): TaskDetail {
   const task = TASKS.find((t) => t.id === id);
   if (!task) throw new MockError(404, `Task ${id} not found`);
   if (!canSee(task, viewer)) throw new MockError(403, `You don't have access to ${id}`);
@@ -1133,7 +1138,7 @@ export function buildGraph(viewer: MockUser): GraphData {
       type: "task",
       label: `${t.id} ${t.title}`,
       status: t.status,
-      department: t.departments[0],
+      ...(t.departments[0] ? { department: t.departments[0] } : {}),
       live: Boolean(t.live),
       parent_id: t.parent_id ? `task:${t.parent_id}` : null,
     });
@@ -1194,7 +1199,7 @@ export function handleMock(
   const url = new URL(path, "http://mock.local");
   const p = url.pathname;
   const q = url.searchParams;
-  const payload = (body ?? {}) as Record<string, string | undefined>;
+  const payload = (body ?? {}) as { email?: string; password?: string; note?: string };
 
   if (p === "/api/health") return { ok: true };
   if (p === "/api/auth/login" && method === "POST") {
@@ -1221,16 +1226,16 @@ export function handleMock(
   }
 
   const kbMatch = p.match(/^\/api\/kb\/([^/]+)$/);
-  if (kbMatch) return readKb(viewer, kbMatch[1]);
+  if (kbMatch) return readKb(viewer, kbMatch[1]!);
 
   const approve = p.match(/^\/api\/tasks\/([^/]+)\/approve$/);
-  if (approve && method === "POST") return actOnTask(viewer, approve[1], "approve", payload.note);
+  if (approve && method === "POST") return actOnTask(viewer, approve[1]!, "approve", payload.note);
 
   const reopen = p.match(/^\/api\/tasks\/([^/]+)\/reopen$/);
-  if (reopen && method === "POST") return actOnTask(viewer, reopen[1], "reopen", payload.note);
+  if (reopen && method === "POST") return actOnTask(viewer, reopen[1]!, "reopen", payload.note);
 
   const task = p.match(/^\/api\/tasks\/([^/]+)$/);
-  if (task && method === "GET") return taskDetail(viewer, task[1]);
+  if (task && method === "GET") return taskDetail(viewer, task[1]!);
 
   throw new MockError(404, `Unknown endpoint ${method} ${p}`);
 }
