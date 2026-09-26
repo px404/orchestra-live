@@ -1,12 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { BookOpen, CheckCheck, Columns3, Network, Rss } from "lucide-react";
+import { BookOpen, Building2, CheckCheck, Columns3, Network, Rss } from "lucide-react";
 
+import { useCompanyView } from "@/hooks/use-company-view";
 import type { Capabilities } from "@/lib/types";
 
 /** Nav items come only from me.capabilities (section 3). */
 export function LeftNav({ capabilities }: { capabilities: Capabilities }) {
+  const { enabled: companyView } = useCompanyView();
   const items = [
     ...(capabilities.graph ? [{ to: "/graph", label: "Graph", icon: Network }] : []),
+    ...(capabilities.graph && companyView ? [{ to: "/company", label: "Company", icon: Building2 }] : []),
     { to: "/board", label: "Board", icon: Columns3 },
     { to: "/activity", label: "Activity", icon: Rss },
     { to: "/knowledge", label: "Knowledge", icon: BookOpen },

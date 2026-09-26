@@ -16,6 +16,9 @@ export const meQuery = () =>
 export const overviewQuery = () =>
   queryOptions({ queryKey: ["overview"], queryFn: api.overview, ...polling(2000) });
 
+export const companyOverviewQuery = () =>
+  queryOptions({ queryKey: ["overview"], queryFn: api.overview, ...polling(5000) });
+
 export const tasksQuery = (filters: {
   status?: string | undefined;
   department?: string | undefined;
@@ -28,8 +31,23 @@ export const tasksQuery = (filters: {
     ...polling(2000),
   });
 
+export const companyTasksQuery = (filters: {
+  status?: string | undefined;
+  department?: string | undefined;
+  person?: string | undefined;
+  mine?: boolean;
+}) =>
+  queryOptions({
+    queryKey: ["tasks", filters],
+    queryFn: () => api.tasks(filters),
+    ...polling(5000),
+  });
+
 export const taskQuery = (id: string) =>
   queryOptions({ queryKey: ["task", id], queryFn: () => api.task(id), ...polling(2000) });
+
+export const companyTaskQuery = (id: string) =>
+  queryOptions({ queryKey: ["task", id], queryFn: () => api.task(id), ...polling(5000) });
 
 export const activityQuery = (filters: { via?: string | undefined; kind?: string | undefined; task?: string | undefined }) =>
   queryOptions({
