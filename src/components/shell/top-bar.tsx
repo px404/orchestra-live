@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bot, Info, Moon, Sun } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Bot, Building2, Info, Moon, Sun } from "lucide-react";
 
 import { Logo } from "@/components/logo";
 import { SourcePill } from "@/components/source-pill";
@@ -40,7 +40,6 @@ export function TopBar({ me }: { me: Me }) {
   const { theme, toggle } = useTheme();
   const { enabled: companyView, setEnabled: setCompanyView } = useCompanyView();
   const navigate = useNavigate();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const active = useActiveAgentCount();
 
   function changeCompanyView(enabled: boolean) {
@@ -111,7 +110,7 @@ export function TopBar({ me }: { me: Me }) {
             aria-label={companyView ? "Turn off Company view" : "Turn on Company view"}
             title="Company view · for startups"
           >
-            <span className="text-xs font-semibold">CO</span>
+            <Building2 className="size-4" />
           </Button>
         ) : null}
         <UserMenu me={me} />

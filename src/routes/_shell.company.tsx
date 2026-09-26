@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { CalendarDays, Lock, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Lock } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { RoleBadge } from "@/components/role-badge";
 import { Avatar, Chip, DueLabel, StatusPill } from "@/components/task-bits";
@@ -11,8 +11,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCompanyView } from "@/hooks/use-company-view";
 import { money, STATUS_LABEL, STATUS_ORDER } from "@/lib/format";
-import { companyOverviewQuery, companyTaskQuery, companyTasksQuery } from "@/lib/queries";
-import type { Overview, Status, TaskDetail, TaskSummary, UserRef } from "@/lib/types";
+import { companyOverviewQuery, companyTaskQuery, companyTasksQuery, meQuery } from "@/lib/queries";
+import type { Overview, Status, TaskSummary, UserRef } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_shell/company")({
@@ -45,8 +45,8 @@ const EXPLANATION =
 function CompanyPage() {
   const navigate = useNavigate();
   const { enabled } = useCompanyView();
-  const { data: me } = useQuery({ queryKey: ["me"], staleTime: 5 * 60_000 });
-  const allowed = Boolean((me as { capabilities?: { graph?: boolean } } | undefined)?.capabilities?.graph);
+  const { data: me } = useQuery(meQuery());
+  const allowed = Boolean(me?.capabilities.graph);
   const { data: tasks = [] } = useQuery({ ...companyTasksQuery({}), enabled: allowed && enabled });
   const { data: overview } = useQuery({ ...companyOverviewQuery(), enabled: allowed && enabled });
   const [groupBy, setGroupBy] = useState<GroupBy>("milestone");
@@ -262,7 +262,7 @@ function PersonPanel({ user, overview, onPanel }: { user: UserRef; overview: Ove
 }
 
 function Metric({ label, value }: { label: string; value: string | number }) { return <div className="bg-card p-3"><p className="text-[11px] text-muted-foreground">{label}</p><p className="mt-1 text-lg font-semibold tabular-nums">{value}</p></div>; }
-function PanelSection({ title, children }: { title: string; children: React.ReactNode }) { return <section><h3 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{title}</h3>{children}</section>; }
+function PanelSection({ title, children }: { title: string; children: ReactNode }) { return <section><h3 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{title}</h3>{children}</section>; }
 function TaskLinks({ tasks, onPanel, empty, tiles = false }: { tasks: Pick<TaskSummary, "id" | "title" | "status">[]; onPanel: (panel: Panel) => void; empty?: string; tiles?: boolean }) {
   if (!tasks.length) return <p className="text-xs text-muted-foreground">{empty}</p>;
   return <div className="space-y-1.5">{tasks.map((task) => <Button key={task.id} variant="outline" className="h-auto w-full justify-start px-2.5 py-2 text-left" onClick={() => onPanel({ kind: "task", id: task.id })}><span className={cn("size-2 shrink-0 rounded-sm", COMPANY_STATUS[task.status])} /><span className={cn("font-mono text-[11px]", tiles && "font-semibold")}>{task.id}</span><span className="truncate text-xs font-normal">{task.title}</span></Button>)}</div>;
