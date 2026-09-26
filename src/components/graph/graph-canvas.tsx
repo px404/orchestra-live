@@ -32,20 +32,21 @@ export default function GraphCanvas({
   data,
   filters,
   fitSignal,
-  onTask,
+  selectedId,
+  onSelect,
 }: {
   data: GraphData;
   filters: GraphFilters;
   fitSignal: number;
-  onTask: (id: string) => void;
+  selectedId: string | null;
+  onSelect: (node: GraphNode | null) => void;
 }) {
   const fg = useRef<ForceGraphMethods<N, L> | undefined>(undefined);
   const wrap = useRef<HTMLDivElement>(null);
   const cache = useRef(new Map<string, N>());
   const [size, setSize] = useState({ w: 800, h: 600 });
   const [hover, setHover] = useState<string | null>(null);
-  const [focus, setFocus] = useState<string | null>(null);
-  const lastBg = useRef(0);
+  const didInitialFit = useRef(false);
 
   useEffect(() => {
     const el = wrap.current;
@@ -86,17 +87,17 @@ export default function GraphCanvas({
     for (const l of graph.links) {
       if (!m.has(l.s)) m.set(l.s, new Set());
       if (!m.has(l.t)) m.set(l.t, new Set());
-      m.get(l.s)!.add(l.t);
-      m.get(l.t)!.add(l.s);
+      m.get(l.s)?.add(l.t);
+      m.get(l.t)?.add(l.s);
     }
     return m;
   }, [graph]);
 
   const highlighted = useMemo(() => {
-    if (!focus) return null;
-    const set = new Set<string>([focus, ...(neighbours.get(focus) ?? [])]);
+    if (!selectedId) return null;
+    const set = new Set<string>([selectedId, ...(neighbours.get(selectedId) ?? [])]);
     return set;
-  }, [focus, neighbours]);
+  }, [selectedId, neighbours]);
 
   useEffect(() => {
     if (fitSignal) fg.current?.zoomToFit(400, 40);
@@ -120,7 +121,15 @@ export default function GraphCanvas({
   const dim = (id: string) => highlighted !== null && !highlighted.has(id);
 
   return (
-    <div ref={wrap} className="absolute inset-0" style={{ background: BG }}>
+    <div
+      ref={wrap}
+      className="absolute inset-0"
+      style={{
+        backgroundColor: BG,
+        backgroundImage: "radial-gradient(circle at 1px 1px, rgba(148,163,184,.12) 1px, transparent 0)",
+        backgroundSize: "24px 24px",
+      }}
+    >
       <ForceGraph2D<N, L>
         ref={fg}
         width={size.w}
@@ -128,28 +137,26 @@ export default function GraphCanvas({
         graphData={graph as never}
         backgroundColor={BG}
         autoPauseRedraw={false}
-        cooldownTicks={120}
+        cooldownTicks={180}
+        d3AlphaDecay={0.025}
+        d3VelocityDecay={0.28}
         nodeRelSize={5}
-        nodeVal={(n) => (n.type === "project" ? 9 : n.type === "milestone" ? 4 : 1.5)}
+        nodeVal={(n) => (n.type === "project" ? 10 : n.type === "milestone" ? 5 : 2.2)}
         onNodeHover={(n) => setHover(n ? String(n.id) : null)}
         onNodeClick={(n) => {
-          if (n.type === "task") onTask(String(n.id).replace(/^task:/, ""));
-          else if (n.type === "person") setFocus(focus === n.id ? null : String(n.id));
-          else if (n.type === "milestone") {
-            const sub = subtree(String(n.id));
-            fg.current?.zoomToFit(500, 60, (x) => sub.has(String(x.id)));
-          }
+          onSelect(selectedId === String(n.id) ? null : n);
         }}
         onBackgroundClick={() => {
-          const now = Date.now();
-          if (now - lastBg.current < 350) {
-            setFocus(null);
-            fg.current?.zoomToFit(400, 40);
-          }
-          lastBg.current = now;
+          onSelect(null);
+        }}
+        onEngineStop={() => {
+          if (didInitialFit.current) return;
+          didInitialFit.current = true;
+          fg.current?.zoomToFit(600, 90);
         }}
         linkColor={(l) => {
-          const a = dim(l.s) || dim(l.t) ? 0.08 : 1;
+          const connected = selectedId && (l.s === selectedId || l.t === selectedId);
+          const a = dim(l.s) || dim(l.t) ? 0.035 : 1;
           if (l.type === "depends_on") return `rgba(249,115,22,${0.9 * a})`;
           if (l.type === "mentions") return `rgba(34,211,238,${0.7 * a})`;
           if (l.type === "works_on") {
@@ -157,9 +164,10 @@ export default function GraphCanvas({
             const c = person?.role ? ROLE_COLOR[person.role] : "#94a3b8";
             return a < 1 ? "rgba(148,163,184,0.06)" : `${c}99`;
           }
-          return `rgba(148,163,184,${0.35 * a})`;
+          if (connected) return `rgba(129,140,248,${0.95 * a})`;
+          return `rgba(148,163,184,${0.28 * a})`;
         }}
-        linkWidth={(l) => (l.type === "depends_on" ? 1.6 : 0.6)}
+        linkWidth={(l) => selectedId && (l.s === selectedId || l.t === selectedId) ? 2.4 : l.type === "depends_on" ? 1.4 : 0.7}
         linkLineDash={(l) => (l.type === "mentions" ? [3, 3] : null)}
         linkDirectionalArrowLength={(l) => (l.type === "depends_on" ? 4 : 0)}
         linkDirectionalArrowRelPos={0.9}
@@ -170,8 +178,20 @@ export default function GraphCanvas({
           const x = n.x ?? 0;
           const y = n.y ?? 0;
           const faded = dim(String(n.id));
-          ctx.globalAlpha = faded ? 0.12 : 1;
+          const selected = selectedId === String(n.id);
+          const connected = highlighted?.has(String(n.id)) ?? false;
+          ctx.globalAlpha = faded ? 0.08 : 1;
           const r = n.type === "project" ? 15 : n.type === "milestone" ? 9 : 6;
+
+          if (selected || (selectedId && connected)) {
+            ctx.beginPath();
+            ctx.arc(x, y, r + (selected ? 8 : 4), 0, Math.PI * 2);
+            ctx.fillStyle = selected ? "rgba(99,102,241,0.24)" : "rgba(16,185,129,0.12)";
+            ctx.fill();
+            ctx.strokeStyle = selected ? "#818cf8" : "rgba(52,211,153,0.75)";
+            ctx.lineWidth = selected ? 2 : 1;
+            ctx.stroke();
+          }
 
           if (n.live) {
             const pulse = 3 + Math.sin(Date.now() / 250) * 2;
@@ -203,12 +223,12 @@ export default function GraphCanvas({
             }
           }
 
-          if (hover === n.id || scale > 1.5 || n.type === "project") {
-            const fs = 11 / scale;
-            ctx.font = `${fs}px Inter, sans-serif`;
+          if (hover === n.id || selected || (selectedId && connected) || scale > 1.8 || n.type === "project") {
+            const fs = (selected ? 12 : 10) / scale;
+            ctx.font = `${selected ? 600 : 500} ${fs}px "DM Sans", sans-serif`;
             ctx.textAlign = "center";
             ctx.textBaseline = "top";
-            ctx.fillStyle = "#e2e8f0";
+            ctx.fillStyle = faded ? "#64748b" : "#f8fafc";
             ctx.fillText(n.label, x, y + r + 2);
           }
           ctx.globalAlpha = 1;
@@ -224,15 +244,3 @@ export default function GraphCanvas({
     </div>
   );
 }
-
-export const LEGEND = [
-  { label: "Project", color: PROJECT },
-  { label: "Milestone", color: MILESTONE },
-  { label: "To do", color: STATUS_COLOR.todo },
-  { label: "In progress", color: STATUS_COLOR.in_progress },
-  { label: "Review", color: STATUS_COLOR.review },
-  { label: "Done", color: STATUS_COLOR.done },
-  { label: "PM", color: ROLE_COLOR.pm, square: true },
-  { label: "Senior", color: ROLE_COLOR.senior, square: true },
-  { label: "Junior", color: ROLE_COLOR.junior, square: true },
-];
