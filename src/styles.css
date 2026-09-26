@@ -14,7 +14,9 @@
 
 @theme inline {
   --font-sans:
-    Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display:
+    "Space Grotesk", "DM Sans", ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -131,19 +133,19 @@
   --surface-foreground: oklch(0.21 0.03 265);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.03 265);
-  --primary: oklch(0.54 0.21 293);
+  --primary: oklch(0.56 0.2 264);
   --primary-foreground: oklch(0.99 0.005 295);
   --secondary: oklch(0.967 0.007 265);
   --secondary-foreground: oklch(0.28 0.03 265);
   --muted: oklch(0.967 0.007 265);
   --muted-foreground: oklch(0.55 0.025 260);
-  --accent: oklch(0.955 0.012 290);
-  --accent-foreground: oklch(0.32 0.06 293);
+  --accent: oklch(0.95 0.02 264);
+  --accent-foreground: oklch(0.35 0.13 264);
   --destructive: oklch(0.58 0.22 25);
   --destructive-foreground: oklch(0.99 0.003 250);
   --border: oklch(0.915 0.01 262);
   --input: oklch(0.915 0.01 262);
-  --ring: oklch(0.54 0.21 293);
+  --ring: oklch(0.56 0.2 264);
 
   --agent: oklch(0.62 0.15 162);
   --agent-foreground: oklch(0.99 0.01 160);
@@ -260,6 +262,42 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+}
+
+@utility company-enter {
+  animation: company-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility company-reveal {
+  animation: company-reveal 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility company-tile {
+  animation: company-tile-in 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
+}
+
+@utility company-live-tile {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 18%, transparent), var(--shadow-card);
+}
+
+@keyframes company-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes company-reveal {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes company-tile-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .company-enter, .company-reveal, .company-tile { animation: none; }
 }
 
 @utility grid-backdrop {

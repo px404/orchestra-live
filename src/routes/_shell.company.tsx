@@ -1,12 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Lock } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Check, Lock, Plus, Users } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { toast } from "sonner";
 
 import { RoleBadge } from "@/components/role-badge";
 import { Avatar, Chip, DueLabel, StatusPill } from "@/components/task-bits";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCompanyView } from "@/hooks/use-company-view";
@@ -51,6 +57,9 @@ function CompanyPage() {
   const { data: overview } = useQuery({ ...companyOverviewQuery(), enabled: allowed && enabled });
   const [groupBy, setGroupBy] = useState<GroupBy>("milestone");
   const [panel, setPanel] = useState<Panel>(null);
+  const [showCompanyTasks, setShowCompanyTasks] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [demoTasks, setDemoTasks] = useState<TaskSummary[]>([]);
 
   useEffect(() => {
     if (me && (!allowed || !enabled)) void navigate({ to: "/board", replace: true });
@@ -58,34 +67,101 @@ function CompanyPage() {
 
   if (!allowed || !enabled) return null;
 
+  const allTasks = [...tasks, ...demoTasks];
+  const yourTasks = allTasks.filter((task) => task.workers.some((worker) => worker.id === me.user.id));
+
   return (
-    <div className="min-h-full bg-surface/45 p-4 sm:p-6">
-      <header className="flex flex-col gap-4 border-b pb-5 xl:flex-row xl:items-end xl:justify-between">
+    <div className="min-h-full bg-surface/45 p-4 sm:p-6 lg:p-8">
+      <header className="company-enter flex flex-col gap-5 border-b pb-6 xl:flex-row xl:items-end xl:justify-between">
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold text-primary">COMPANY VIEW</p>
-          <h1 className="mt-1 text-2xl font-semibold">Company progress</h1>
+          <p className="text-xs font-bold uppercase text-primary">Company view</p>
+          <h1 className="font-display mt-1 text-3xl font-semibold">Company progress</h1>
           <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{EXPLANATION}</p>
         </div>
         <StatusLegend />
       </header>
 
-      <Kpis tasks={tasks} overview={overview} />
+      <Kpis tasks={allTasks} overview={overview} />
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold">All work</h2>
-          <p className="text-xs text-muted-foreground">Grouped for fast progress checks</p>
+      <div className="company-enter mt-6 overflow-hidden rounded-lg border bg-card shadow-card [animation-delay:80ms]">
+        <div className="flex flex-col gap-4 border-b px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="font-display text-lg font-semibold">Focused work</h2>
+            <p className="text-xs text-muted-foreground">Your assigned tasks stay visible. Company detail is optional.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-3 rounded-full bg-surface px-3 py-1.5">
+              <span className="text-xs font-semibold text-primary">Your tasks</span>
+              <span className="h-4 w-px bg-border" />
+              <Label htmlFor="show-company" className="text-[11px] font-bold uppercase text-muted-foreground">Company</Label>
+              <Switch id="show-company" checked={showCompanyTasks} onCheckedChange={setShowCompanyTasks} aria-label="Show company tasks" />
+            </div>
+            <Button onClick={() => setCreateOpen(true)}><Plus /> Add task</Button>
+          </div>
         </div>
-        <ToggleGroup type="single" value={groupBy} onValueChange={(value) => value && setGroupBy(value as GroupBy)} variant="outline" size="sm">
-          <ToggleGroupItem value="milestone">Milestone</ToggleGroupItem>
-          <ToggleGroupItem value="department">Department</ToggleGroupItem>
-          <ToggleGroupItem value="person">Person</ToggleGroupItem>
-        </ToggleGroup>
-      </div>
 
-      <TaskGroups tasks={tasks} overview={overview} groupBy={groupBy} onPanel={setPanel} />
+        <div className="grid lg:grid-cols-[104px_1fr]">
+          <GroupingRail groupBy={groupBy} onChange={setGroupBy} />
+          <div className="min-w-0 p-5 sm:p-7">
+            <TaskLane title="Your tasks" tasks={yourTasks} onPanel={setPanel} emphasized empty="No tasks are assigned to you right now" />
+            {showCompanyTasks ? (
+              <div className="company-reveal mt-9 border-t pt-7">
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <h3 className="font-display text-base font-semibold">Company tasks</h3>
+                    <p className="text-xs text-muted-foreground">Visible work from people below you, grouped for a quick scan.</p>
+                  </div>
+                  <ToggleGroup type="single" value={groupBy} onValueChange={(value) => value && setGroupBy(value as GroupBy)} variant="outline" size="sm">
+                    <ToggleGroupItem value="milestone">Milestone</ToggleGroupItem>
+                    <ToggleGroupItem value="department">Department</ToggleGroupItem>
+                    <ToggleGroupItem value="person">Person</ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+                <TaskGroups tasks={allTasks} overview={overview} groupBy={groupBy} onPanel={setPanel} />
+              </div>
+            ) : (
+              <button type="button" onClick={() => setShowCompanyTasks(true)} className="mt-9 flex w-full items-center justify-between border-t border-dashed pt-5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground">
+                <span className="inline-flex items-center gap-2"><Users className="size-4" /> Company tasks are hidden to keep this view focused</span>
+                <span className="font-semibold text-primary">Show company tasks</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
       <CompanyPanel panel={panel} overview={overview} onPanel={setPanel} />
+      <CreateTaskDialog open={createOpen} onOpenChange={setCreateOpen} tasks={allTasks} currentUser={me.user} onCreate={(task) => { setDemoTasks((current) => [...current, task]); setShowCompanyTasks(true); }} />
     </div>
+  );
+}
+
+function GroupingRail({ groupBy, onChange }: { groupBy: GroupBy; onChange: (value: GroupBy) => void }) {
+  return (
+    <aside className="border-b bg-surface/55 p-3 lg:border-b-0 lg:border-r lg:py-7">
+      <div className="flex gap-2 lg:flex-col">
+        {(["milestone", "department", "person"] as const).map((value) => (
+          <Button key={value} variant={groupBy === value ? "default" : "ghost"} className="h-auto flex-1 flex-col gap-0.5 px-2 py-2 text-[10px] font-bold uppercase lg:w-full" onClick={() => onChange(value)}>
+            {value.slice(0, 1).toUpperCase()}{value === "milestone" ? "1" : ""}
+            <span className="max-w-full truncate text-[9px] font-medium normal-case opacity-70">{value}</span>
+          </Button>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function TaskLane({ title, tasks, onPanel, emphasized = false, empty }: { title: string; tasks: TaskSummary[]; onPanel: (panel: Panel) => void; emphasized?: boolean; empty: string }) {
+  return (
+    <section>
+      <div className="mb-4 flex items-center gap-3">
+        <h3 className={cn("text-xs font-bold uppercase", emphasized && "text-primary")}>{title}</h3>
+        <span className={cn("h-px flex-1", emphasized ? "bg-primary/15" : "bg-border")} />
+        <span className="text-[10px] tabular-nums text-muted-foreground">{tasks.length}</span>
+      </div>
+      <div className="flex min-h-16 flex-wrap items-center gap-3">
+        {ordered(tasks).map((task, index) => <TaskTile key={task.id} task={task} onClick={() => onPanel({ kind: "task", id: task.id })} index={index} />)}
+        {!tasks.length ? <p className="text-xs text-muted-foreground">{empty}</p> : null}
+      </div>
+    </section>
   );
 }
 
@@ -101,7 +177,7 @@ function Kpis({ tasks, overview }: { tasks: TaskSummary[]; overview: Overview | 
     ["Agent spend", money(overview?.cost?.total_usd ?? 0)],
   ];
   return (
-    <div className="mt-5 grid grid-cols-2 divide-x divide-y overflow-hidden rounded-lg border bg-card sm:grid-cols-3 xl:grid-cols-6 xl:divide-y-0">
+    <div className="company-enter mt-5 grid grid-cols-2 divide-x divide-y overflow-hidden rounded-lg border bg-card shadow-card sm:grid-cols-3 xl:grid-cols-6 xl:divide-y-0 [animation-delay:40ms]">
       {values.map(([label, value]) => (
         <div key={label} className="min-w-0 px-4 py-3">
           <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
@@ -138,12 +214,12 @@ function TaskGroups({ tasks, overview, groupBy, onPanel }: { tasks: TaskSummary[
   }, [groupBy, overview?.milestones, tasks]);
 
   return (
-    <div className="mt-3 overflow-hidden rounded-lg border bg-card">
+    <div className="overflow-hidden rounded-md border bg-background">
       {groups.map((group) => {
         const done = group.tasks.filter((t) => t.status === "done").length;
         const pct = group.tasks.length ? Math.round((done / group.tasks.length) * 100) : 0;
         return (
-          <section key={group.id} className="grid gap-3 border-b p-3 last:border-b-0 md:grid-cols-[190px_1fr]">
+          <section key={group.id} className="grid gap-4 border-b p-4 last:border-b-0 md:grid-cols-[180px_1fr]">
             <div className="min-w-0 self-center">
               {group.person ? (
                 <Button variant="ghost" className="h-auto max-w-full justify-start px-1 py-0.5" onClick={() => onPanel({ kind: "person", user: group.person as UserRef })}>
@@ -155,8 +231,8 @@ function TaskGroups({ tasks, overview, groupBy, onPanel }: { tasks: TaskSummary[
                 <span className="text-[10px] tabular-nums text-muted-foreground">{pct}%</span>
               </div>
             </div>
-            <div className="flex min-h-9 flex-wrap items-center gap-1.5">
-              {ordered(group.tasks).map((task) => <TaskTile key={task.id} task={task} onClick={() => onPanel({ kind: "task", id: task.id })} />)}
+            <div className="flex min-h-14 flex-wrap items-center gap-3">
+              {ordered(group.tasks).map((task, index) => <TaskTile key={task.id} task={task} onClick={() => onPanel({ kind: "task", id: task.id })} index={index} />)}
               {!group.tasks.length ? <span className="text-xs text-muted-foreground">No tasks</span> : null}
             </div>
           </section>
@@ -167,14 +243,10 @@ function TaskGroups({ tasks, overview, groupBy, onPanel }: { tasks: TaskSummary[
 }
 
 function ordered(tasks: TaskSummary[]) {
-  return [...tasks].sort((a, b) => {
-    if (a.parent_id === b.id) return 1;
-    if (b.parent_id === a.id) return -1;
-    return (a.sequence ?? 999) - (b.sequence ?? 999);
-  });
+  return [...tasks].sort((a, b) => (a.sequence ?? 999) - (b.sequence ?? 999) || a.id.localeCompare(b.id, undefined, { numeric: true }));
 }
 
-function TaskTile({ task, onClick }: { task: TaskSummary; onClick: () => void }) {
+function TaskTile({ task, onClick, index = 0 }: { task: TaskSummary; onClick: () => void; index?: number }) {
   const subtask = Boolean(task.parent_id);
   return (
     <TooltipProvider delayDuration={150}>
@@ -186,21 +258,77 @@ function TaskTile({ task, onClick }: { task: TaskSummary; onClick: () => void })
             onClick={onClick}
             aria-label={`Open ${task.id}: ${task.title}`}
             className={cn(
-              "relative shrink-0 rounded-md p-0 font-mono text-[10px] font-bold shadow-none hover:brightness-95",
-              subtask ? "size-5" : "size-9",
+              "company-tile relative size-14 shrink-0 rounded-lg p-0 font-mono text-[10px] font-bold shadow-none hover:-translate-y-0.5 hover:brightness-95",
               COMPANY_STATUS[task.status],
               task.locked && "opacity-60",
               task.overdue && "ring-2 ring-company-overdue",
-              task.live && "animate-live-pulse",
+              task.live && "company-live-tile",
+              subtask && "border-2 border-dashed border-current",
             )}
+            style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
           >
-            <span className={cn(subtask && "scale-75")}>{task.id}</span>
+            <span>{task.id}</span>
+            {subtask ? <span className="absolute bottom-1 text-[7px] font-medium uppercase opacity-70">Subtask</span> : null}
             {task.locked ? <Lock className="absolute right-0.5 top-0.5 size-2.5" /> : null}
           </Button>
         </TooltipTrigger>
         <TooltipContent className="max-w-64"><p className="font-medium">{task.id} · {task.title}</p><p className="opacity-80">{STATUS_LABEL[task.status]}</p></TooltipContent>
       </Tooltip>
     </TooltipProvider>
+  );
+}
+
+function CreateTaskDialog({ open, onOpenChange, tasks, currentUser, onCreate }: { open: boolean; onOpenChange: (open: boolean) => void; tasks: TaskSummary[]; currentUser: UserRef; onCreate: (task: TaskSummary) => void }) {
+  const people = uniquePeople([currentUser, ...tasks.flatMap((task) => task.workers)]);
+  const [title, setTitle] = useState("");
+  const [assigneeId, setAssigneeId] = useState(currentUser.id);
+
+  function assign(event: FormEvent) {
+    event.preventDefault();
+    const assignee = people.find((person) => person.id === assigneeId) ?? currentUser;
+    const nextNumber = Math.max(0, ...tasks.map((task) => Number(task.id.replace(/\D/g, "")) || 0)) + 1;
+    const task: TaskSummary = {
+      id: `T-${nextNumber}`,
+      title: title.trim() || "New assigned task",
+      status: "todo",
+      milestone: tasks[0]?.milestone ?? { id: "demo", name: "New work" },
+      parent_id: null,
+      departments: [assignee.department],
+      workers: [assignee],
+      access: [currentUser],
+      live: null,
+      cost_usd: 0,
+      updated_at: new Date().toISOString(),
+      due: null,
+      overdue: false,
+      sequence: nextNumber,
+      locked: false,
+      blocked_by: [],
+      allowed_actions: [],
+    };
+    onCreate(task);
+    setTitle("");
+    onOpenChange(false);
+    toast.success("Assigned", { description: `${task.id} is now shown in the Company view. This is a visual preview only.` });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <form onSubmit={assign} className="space-y-5">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">Assign a task</DialogTitle>
+            <DialogDescription>This preview adds the task to this screen only and does not change company data.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2"><Label htmlFor="task-title">Task</Label><Input id="task-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="What needs to be done?" autoFocus /></div>
+          <div className="space-y-2">
+            <Label>Assign to</Label>
+            <Select value={assigneeId} onValueChange={setAssigneeId}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{people.map((person) => <SelectItem key={person.id} value={person.id}>{person.name} · {person.department}</SelectItem>)}</SelectContent></Select>
+          </div>
+          <DialogFooter><Button type="submit"><Check /> Assign task</Button></DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
