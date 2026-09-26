@@ -158,7 +158,7 @@ function TaskLane({ title, tasks, onPanel, emphasized = false, empty }: { title:
         <span className="text-[10px] tabular-nums text-muted-foreground">{tasks.length}</span>
       </div>
       <div className="flex min-h-16 flex-wrap items-center gap-3">
-        {ordered(tasks).map((task, index) => <TaskTile key={task.id} task={task} onClick={() => onPanel({ kind: "task", id: task.id })} index={index} />)}
+        {ordered(tasks).map((task, index) => <TaskTile key={task.id} task={task} onClick={() => task.id.startsWith("DEMO-") ? toast.info("Visual preview only", { description: "This task has not been saved to company data." }) : onPanel({ kind: "task", id: task.id })} index={index} />)}
         {!tasks.length ? <p className="text-xs text-muted-foreground">{empty}</p> : null}
       </div>
     </section>
@@ -232,7 +232,7 @@ function TaskGroups({ tasks, overview, groupBy, onPanel }: { tasks: TaskSummary[
               </div>
             </div>
             <div className="flex min-h-14 flex-wrap items-center gap-3">
-              {ordered(group.tasks).map((task, index) => <TaskTile key={task.id} task={task} onClick={() => onPanel({ kind: "task", id: task.id })} index={index} />)}
+              {ordered(group.tasks).map((task, index) => <TaskTile key={task.id} task={task} onClick={() => task.id.startsWith("DEMO-") ? toast.info("Visual preview only", { description: "This task has not been saved to company data." }) : onPanel({ kind: "task", id: task.id })} index={index} />)}
               {!group.tasks.length ? <span className="text-xs text-muted-foreground">No tasks</span> : null}
             </div>
           </section>
@@ -286,9 +286,9 @@ function CreateTaskDialog({ open, onOpenChange, tasks, currentUser, onCreate }: 
   function assign(event: FormEvent) {
     event.preventDefault();
     const assignee = people.find((person) => person.id === assigneeId) ?? currentUser;
-    const nextNumber = Math.max(0, ...tasks.map((task) => Number(task.id.replace(/\D/g, "")) || 0)) + 1;
+    const nextNumber = tasks.filter((task) => task.id.startsWith("DEMO-")).length + 1;
     const task: TaskSummary = {
-      id: `T-${nextNumber}`,
+      id: `DEMO-${nextNumber}`,
       title: title.trim() || "New assigned task",
       status: "todo",
       milestone: tasks[0]?.milestone ?? { id: "demo", name: "New work" },
