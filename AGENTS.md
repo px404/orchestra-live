@@ -15,4 +15,5 @@
 - Every network call goes through `src/lib/api.ts`; no component calls `fetch` directly, so token, error shape, 401 handling and mock switching stay in one place.
 - `src/lib/mock.ts` is a full in-memory backend keyed by the same paths and query filters as the real API, so mock and live differ only in transport.
 - Shared query options with polling intervals live in `src/lib/queries.ts` so every screen polls consistently (2s pages, 5s graph) and keeps previous data.
+- Company view is a PM-capability-gated, localStorage-enabled projection of existing task/overview endpoints; it polls every 5s and never renders agent-authored content.
 - No backend integrations (Cloud/Supabase/auth providers): the app is frontend-only against an external Express API.

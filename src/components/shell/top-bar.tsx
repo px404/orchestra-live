@@ -1,10 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { Bot, Moon, Sun } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Bot, Building2, Info, Moon, Sun } from "lucide-react";
 
 import { Logo } from "@/components/logo";
 import { SourcePill } from "@/components/source-pill";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCompanyView } from "@/hooks/use-company-view";
 import { useTheme } from "@/hooks/use-theme";
 import { overviewQuery } from "@/lib/queries";
 import type { Me } from "@/lib/types";
@@ -34,7 +38,14 @@ function MilestoneStrip() {
 
 export function TopBar({ me }: { me: Me }) {
   const { theme, toggle } = useTheme();
+  const { enabled: companyView, setEnabled: setCompanyView } = useCompanyView();
+  const navigate = useNavigate();
   const active = useActiveAgentCount();
+
+  function changeCompanyView(enabled: boolean) {
+    setCompanyView(enabled);
+    void navigate({ to: enabled ? "/company" : me.capabilities.graph ? "/graph" : "/board" });
+  }
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-4 border-b bg-card px-4">
@@ -49,6 +60,27 @@ export function TopBar({ me }: { me: Me }) {
         <MilestoneStrip />
       </div>
       <div className="flex items-center gap-2">
+        {me.capabilities.graph ? (
+          <div className="hidden items-center gap-2 rounded-md border bg-background px-2.5 py-1.5 xl:flex">
+            <Switch
+              id="company-view"
+              checked={companyView}
+              onCheckedChange={changeCompanyView}
+              aria-label="Company view for startups"
+            />
+            <label htmlFor="company-view" className="cursor-pointer text-xs font-medium">Company view · for startups</label>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="size-5" aria-label="About Company view"><Info className="size-3.5" /></Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-72 leading-5">
+                  For startups: see the whole company's progress at a glance. Every task, who's on it and what it costs. Progress only: no prompts or agent reports.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        ) : null}
         <SourcePill />
         <Sheet>
           <SheetTrigger asChild>
@@ -69,6 +101,18 @@ export function TopBar({ me }: { me: Me }) {
         <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle dark mode">
           {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
         </Button>
+        {me.capabilities.graph ? (
+          <Button
+            variant={companyView ? "secondary" : "ghost"}
+            size="icon"
+            className="xl:hidden"
+            onClick={() => changeCompanyView(!companyView)}
+            aria-label={companyView ? "Turn off Company view" : "Turn on Company view"}
+            title="Company view · for startups"
+          >
+            <Building2 className="size-4" />
+          </Button>
+        ) : null}
         <UserMenu me={me} />
       </div>
     </header>
