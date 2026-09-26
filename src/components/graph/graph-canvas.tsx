@@ -125,7 +125,7 @@ export default function GraphCanvas({
         ref={fg}
         width={size.w}
         height={size.h}
-        graphData={graph}
+        graphData={graph as never}
         backgroundColor={BG}
         autoPauseRedraw={false}
         cooldownTicks={120}

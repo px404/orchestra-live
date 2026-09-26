@@ -248,14 +248,14 @@ export const api = {
   logout: () => request<{ ok: true }>("POST", "/api/auth/logout"),
   me: () => request<Me>("GET", "/api/me"),
   agentKey: () => request<AgentKey>("GET", "/api/me/agent-key"),
-  tasks: (filters: { status?: string; department?: string; person?: string; mine?: boolean } = {}) =>
+  tasks: (filters: { status?: string | undefined; department?: string | undefined; person?: string | undefined; mine?: boolean } = {}) =>
     request<TaskSummary[]>("GET", `/api/tasks${query(filters)}`),
   task: (id: string) => request<TaskDetail>("GET", `/api/tasks/${id}`),
   approve: (id: string, note?: string) =>
     request<TaskDetail>("POST", `/api/tasks/${id}/approve`, { note }),
   reopen: (id: string, note: string) =>
     request<TaskDetail>("POST", `/api/tasks/${id}/reopen`, { note }),
-  activity: (filters: { limit?: number; task?: string; via?: string; kind?: string } = {}) =>
+  activity: (filters: { limit?: number; task?: string | undefined; via?: string | undefined; kind?: string | undefined } = {}) =>
     request<Update[]>(
       "GET",
       `/api/activity${query({ ...filters, limit: String(filters.limit ?? 50) })}`,
