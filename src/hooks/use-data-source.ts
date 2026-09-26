@@ -38,7 +38,8 @@ export function useSourceMonitor() {
   useEffect(() => {
     startSourceMonitor();
     const unsubscribe = onSourceFlip((next) => {
-      queryClient.clear();
+      // Only auto mode switches the data itself; off mode just reflects health in the pill.
+      if (getMockMode() === "auto") void queryClient.resetQueries();
       if (next === "mock") {
         toast.warning("Backend offline, showing mock data");
       } else {
